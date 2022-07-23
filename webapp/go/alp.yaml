@@ -13,8 +13,25 @@ limit:                      # 5000
 noheaders:                  # boolean
 show_footers:               # boolean
 matching_groups:            # array
-  - "/api/player/competition/[0-9A-Z]+?/ranking"
-  - "/api/organizer/competition/[0-9A-Z]+?//score"
+  - "/api/admin/tenants/add"
+  - "/api/admin/tenants/billing(\\?before=\\d+)?"
+  - "/api/me"
+  - "/api/organizer/billing"
+  - "/api/organizer/competition/[0-9a-z]+/score"
+  - "/api/organizer/competition/[0-9a-z]+/finish"
+  - "/api/organizer/competitions"
+  - "/api/organizer/competitions/add"
+  - "/api/organizer/player/[0-9a-z]+/disqualified"
+  - "/api/organizer/players"
+  - "/api/organizer/players/add"
+  - "/api/player/competition/[0-9a-z]+/ranking(\\?rank_after=\\d+)?"
+  - "/api/player/competitions"
+  - "/api/player/player/[0-9a-z]+"
+  - "/css/app.83b4c321.css"
+  - "/index.html"
+  - "/initialize"
+  - "/js/app.3a4ec98c.js"
+  - "/organizer/players"
 filters:                    # string
 output:                     # string(comma separated)
 pos_file:                   # string
