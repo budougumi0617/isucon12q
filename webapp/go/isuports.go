@@ -16,7 +16,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -82,20 +81,13 @@ func tenantDBPath(id int64) string {
 	return filepath.Join(tenantDBDir, fmt.Sprintf("%d.db", id))
 }
 
-// 簡易的なキャッシュ
-var tenantDBMap sync.Map
-
 // テナントDBに接続する
 func connectToTenantDB(id int64) (*sqlx.DB, error) {
-	if db, ok := tenantDBMap.Load(id); ok {
-		return db.(*sqlx.DB), nil
-	}
 	p := tenantDBPath(id)
 	db, err := sqlx.Open(sqliteDriverName, fmt.Sprintf("file:%s?mode=rw", p))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open tenant DB: %w", err)
 	}
-	tenantDBMap.Store(id, db)
 	return db, nil
 }
 
@@ -696,7 +688,7 @@ func tenantsBillingHandler(c echo.Context) error {
 			if err != nil {
 				return fmt.Errorf("failed to connectToTenantDB: %w", err)
 			}
-
+			defer tenantDB.Close()
 			cs := []CompetitionRow{}
 			if err := tenantDB.SelectContext(
 				ctx,
@@ -757,6 +749,7 @@ func playersListHandler(c echo.Context) error {
 	if err != nil {
 		return fmt.Errorf("error connectToTenantDB: %w", err)
 	}
+	defer tenantDB.Close()
 
 	var pls []PlayerRow
 	if err := tenantDB.SelectContext(
@@ -802,6 +795,7 @@ func playersAddHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	params, err := c.FormParams()
 	if err != nil {
@@ -864,6 +858,7 @@ func playerDisqualifiedHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	playerID := c.Param("player_id")
 
@@ -923,6 +918,7 @@ func competitionsAddHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	title := c.FormValue("title")
 
@@ -968,6 +964,7 @@ func competitionFinishHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	id := c.Param("competition_id")
 	if id == "" {
@@ -1017,6 +1014,7 @@ func competitionScoreHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	competitionID := c.Param("competition_id")
 	if competitionID == "" {
@@ -1161,6 +1159,7 @@ func billingHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	cs := []CompetitionRow{}
 	if err := tenantDB.SelectContext(
@@ -1217,6 +1216,7 @@ func playerHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	if err := authorizePlayer(ctx, tenantDB, v.playerID); err != nil {
 		return err
@@ -1333,6 +1333,7 @@ func competitionRankingHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	if err := authorizePlayer(ctx, tenantDB, v.playerID); err != nil {
 		return err
@@ -1475,6 +1476,7 @@ func playerCompetitionsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	if err := authorizePlayer(ctx, tenantDB, v.playerID); err != nil {
 		return err
@@ -1498,6 +1500,7 @@ func organizerCompetitionsHandler(c echo.Context) error {
 	if err != nil {
 		return err
 	}
+	defer tenantDB.Close()
 
 	return competitionsHandler(c, v, tenantDB)
 }
