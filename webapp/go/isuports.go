@@ -22,7 +22,6 @@ import (
 
 	_ "net/http/pprof"
 
-	"github.com/felixge/fgprof"
 	"github.com/go-sql-driver/mysql"
 	"github.com/gofrs/flock"
 	"github.com/jmoiron/sqlx"
@@ -145,14 +144,9 @@ func SetCacheControlPrivate(next echo.HandlerFunc) echo.HandlerFunc {
 
 // Run は cmd/isuports/main.go から呼ばれるエントリーポイントです
 func Run() {
-	http.DefaultServeMux.Handle("/debug/fgprof", fgprof.Handler())
-	go func() {
-		fmt.Println(http.ListenAndServe(":6060", nil))
-	}()
-
 	e := echo.New()
-	e.Debug = true
-	e.Logger.SetLevel(log.DEBUG)
+	e.Debug = false
+	e.Logger.SetLevel(log.OFF)
 
 	var (
 		sqlLogger io.Closer
