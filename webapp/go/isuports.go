@@ -566,7 +566,7 @@ func billingReportByCompetition(ctx context.Context, tenantDB dbOrTx, tenantID i
 	if err := adminDB.SelectContext(
 		ctx,
 		&vhs,
-		"SELECT player_id, created_at AS min_created_at FROM visit_history WHERE tenant_id = ? AND competition_id = ?",
+		"SELECT player_id, MIN(created_at) AS min_created_at FROM visit_history WHERE tenant_id = ? AND competition_id = ? GROUP BY player_id",
 		tenantID,
 		comp.ID,
 	); err != nil && err != sql.ErrNoRows {
@@ -1314,13 +1314,6 @@ type CompetitionRankingHandlerResult struct {
 	Ranks       []CompetitionRank `json:"ranks"`
 }
 
-const (
-	// ErrCodeMySQLDuplicateEntry はMySQL系ののDUPLICATEエラーコード
-	// https://dev.mysql.com/doc/mysql-errors/8.0/en/server-error-reference.html
-	// Error number: 1062; Symbol: ER_DUP_ENTRY; SQLSTATE: 23000
-	ErrCodeMySQLDuplicateEntry = 1062
-)
-
 // 参加者向けAPI
 // GET /api/player/competition/:competition_id/ranking
 // 大会ごとのランキングを取得する
@@ -1369,14 +1362,10 @@ func competitionRankingHandler(c echo.Context) error {
 		"INSERT INTO visit_history (player_id, tenant_id, competition_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
 		v.playerID, tenant.ID, competitionID, now, now,
 	); err != nil {
-		var mysqlErr *mysql.MySQLError
-		// ユニークインデックスで2回目以降の履歴保存を弾く。
-		if errors.As(err, &mysqlErr) && mysqlErr.Number != ErrCodeMySQLDuplicateEntry {
-			return fmt.Errorf(
-				"error Insert visit_history: playerID=%s, tenantID=%d, competitionID=%s, createdAt=%d, updatedAt=%d, %w",
-				v.playerID, tenant.ID, competitionID, now, now, err,
-			)
-		}
+		return fmt.Errorf(
+			"error Insert visit_history: playerID=%s, tenantID=%d, competitionID=%s, createdAt=%d, updatedAt=%d, %w",
+			v.playerID, tenant.ID, competitionID, now, now, err,
+		)
 	}
 
 	var rankAfter int64
