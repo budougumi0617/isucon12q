@@ -1,6 +1,6 @@
 all: isuports
 
-bench:
+bench: isuports
 	sudo truncate --size 0 /var/log/mysql/slow.log
 	sudo truncate --size 0 /var/log/nginx/access.log
 	sudo systemctl restart nginx.service
