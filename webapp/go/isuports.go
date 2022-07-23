@@ -65,7 +65,7 @@ func getEnv(key string, defaultValue string) string {
 func connectAdminDB() (*sqlx.DB, error) {
 	config := mysql.NewConfig()
 	config.Net = "tcp"
-	config.Addr = "18.177.108.217" + ":" + getEnv("ISUCON_DB_PORT", "3306")
+	config.Addr = "192.168.0.12" + ":" + getEnv("ISUCON_DB_PORT", "3306")
 	config.User = getEnv("ISUCON_DB_USER", "isucon")
 	config.Passwd = getEnv("ISUCON_DB_PASSWORD", "isucon")
 	config.DBName = getEnv("ISUCON_DB_NAME", "isuports")
